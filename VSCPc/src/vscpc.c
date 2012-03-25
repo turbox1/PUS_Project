@@ -89,7 +89,7 @@ char* give_params(struct vscp_frame* vf) {
     int val;
     switch(vf->v_type) {
     case 6:
-      for(i=0; i<4; i++) ((uint8_t*)&val)[i] = vf->v_data[3-i];
+      for(i=0; i<4; i++) ((uint8_t*)&val)[i] = vf->v_data[4-i];
       sprintf(tmp, "%s: \"%d\", %s: \"%d\"", VAL, val, UNIT, 0);
       break;
     

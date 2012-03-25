@@ -64,15 +64,10 @@ void* web_thread_fun(void* arg) {
 
   time_t rawtime;
   
-  srand(time(&rawtime));
+  srand(time(NULL));
 
   out_frame[0].v_class = 10;
   out_frame[0].v_type = 6;
-
-  int temp = (rand()%2)*100 + (rand()%10)*10 + (rand()%10);
-  for(i=0; i<4; i++) {
-    out_frame[0].v_data[3-i]=((uint8_t*)&temp)[i];
-  }
 
   out_frame[1].v_class = 10;
   out_frame[1].v_type = 35;
@@ -83,6 +78,10 @@ void* web_thread_fun(void* arg) {
 
   while(1) {
     if(retval = recvfrom(udp_fd, &v_frame, sizeof(struct vscp_frame), 0, (struct sockaddr*)&saddr, &saddr_len)) {
+
+        int temp = (rand()%2)*100 + (rand()%10)*10 + (rand()%10);
+	for(i=0; i<4; i++) out_frame[0].v_data[4-i]=((uint8_t*)&temp)[i];
+	
       // print_vscp_frame(&v_frame);
       time(&rawtime);
       printf("Temp: %d -  %s", temp, ctime(&rawtime));
