@@ -9,11 +9,14 @@
 #define CLASS "\"class\""
 #define TYPE "\"type\""
 #define ID "\"id\""
-#define OPTIONS "\"options\""
+#define PARAMS "\"params\""
 #define VAL "\"value\""
+#define UNIT "\"unit\""
+
 
 //--- function ---
 void print_all_frame(const int dev_numb, struct vscp_frame* vf);
+char* give_params(struct vscp_frame* vf);
 
 
 int main() {
@@ -71,22 +74,24 @@ void print_all_frame(const int dev_numb, struct vscp_frame* vf) {
   printf("[");
   int i;
   for(i=0; i<dev_numb; i++) {
-    printf("{%s: \"%d\", %s: \"%d\", %s: \"%d\", %s: \"%d\"}", CLASS, vf[i].v_class, TYPE, vf[i].v_type, ID, vf[i].v_data[7], VAL, vf[i].v_data[3]);
+    char* ttmp = give_params(&vf[i]);
+    printf("{%s: \"%d\", %s: \"%d\", %s: \"%d\", %s: {%s}}", CLASS, vf[i].v_class, TYPE, vf[i].v_type, ID, vf[i].v_data[7], PARAMS, ttmp);
     if(i<dev_numb-1) printf(", ");
+    free(ttmp);
   }
   printf("]");
 }
-
 
 char* give_params(struct vscp_frame* vf) {
   char *tmp = (char*)malloc(128*sizeof(unsigned char));
   if(vf->v_class == 10) {
     int i;
     int val;
+    for(i=0; i<4; i++) ((uint8_t*)&val)[i] = vf->v_data[4-i];
+
     switch(vf->v_type) {
     case 6:
-      for(i=0; i<4; i++) ((uint8_t*)&val)[i] = vf->v_data[4-i];
-      sprintf(tmp, "%s: \"%d\", %s: \"%d\"", VAL, val, UNIT, 0);
+      sprintf(tmp, "%s: \"%lf\", %s: \"%d\"", VAL, (float)(val/10.), UNIT, 1);
       break;
     
     case 35:

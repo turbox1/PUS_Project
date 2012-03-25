@@ -79,12 +79,19 @@ void* web_thread_fun(void* arg) {
   while(1) {
     if(retval = recvfrom(udp_fd, &v_frame, sizeof(struct vscp_frame), 0, (struct sockaddr*)&saddr, &saddr_len)) {
 
-        int temp = (rand()%2)*100 + (rand()%10)*10 + (rand()%10);
-	for(i=0; i<4; i++) out_frame[0].v_data[4-i]=((uint8_t*)&temp)[i];
+      int temp;
+      for(i=0; i<dev_numb; i++) {
+	int x;
+	if(i==1)
+	  temp = (rand()%10)*100 + (rand()%10)*10 + (rand()%10);
+	else
+	  temp = (rand()%3)*100 + (rand()%10)*10 + (rand()%10);
+	for(x=0; x<4; x++) out_frame[i].v_data[4-x]=((uint8_t*)&temp)[x];
+      }
 	
       // print_vscp_frame(&v_frame);
       time(&rawtime);
-      printf("Temp: %d -  %s", temp, ctime(&rawtime));
+      printf("Humidity: %d -  %s", temp, ctime(&rawtime));
       sendto(udp_fd, &dev_numb, sizeof(int), 0, (struct sockaddr*)&saddr, saddr_len);
       for(i=0; i<dev_numb; i++)
 	sendto(udp_fd, &out_frame[i], sizeof(struct vscp_frame), 0, (struct sockaddr*)&saddr, saddr_len);
