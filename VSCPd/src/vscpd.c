@@ -61,15 +61,21 @@ void* web_thread_fun(void* arg) {
 
   struct vscp_frame* out_frame = (struct vscp_frame*)malloc(dev_numb*sizeof(struct vscp_frame));
   int i;
+
+  time_t rawtime;
   
+  srand(time(&rawtime));
+
   out_frame[0].v_class = 10;
   out_frame[0].v_type = 6;
 
+  int temp = (rand()%2)*100 + (rand()%10)*10 + (rand()%10);
+  for(i=0; i<4; i++) {
+    out_frame[0].v_data[3-i]=((uint8_t*)&temp)[i];
+  }
+
   out_frame[1].v_class = 10;
   out_frame[1].v_type = 35;
-
-  time_t rawtime;
-
 
   saddr_len = sizeof(saddr);
 
@@ -79,7 +85,7 @@ void* web_thread_fun(void* arg) {
     if(retval = recvfrom(udp_fd, &v_frame, sizeof(struct vscp_frame), 0, (struct sockaddr*)&saddr, &saddr_len)) {
       // print_vscp_frame(&v_frame);
       time(&rawtime);
-      printf("%s[ FRAME ]\n", ctime(&rawtime), inet_ntoa(saddr.sin_addr));
+      printf("Temp: %d -  %s", temp, ctime(&rawtime));
       sendto(udp_fd, &dev_numb, sizeof(int), 0, (struct sockaddr*)&saddr, saddr_len);
       for(i=0; i<dev_numb; i++)
 	sendto(udp_fd, &out_frame[i], sizeof(struct vscp_frame), 0, (struct sockaddr*)&saddr, saddr_len);
