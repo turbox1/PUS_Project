@@ -33,7 +33,7 @@ App.Deamon = function() {
     var _options = {
         url     : "cgi-bin/vscpc.cgi",
         data    : "class=15&type=0",
-        interval: 10000
+        interval: 5000
     };
 
     var run = function() {
@@ -69,19 +69,18 @@ App.Builder = (function() {
 
     function _refreshAll() {
         $(_devicesDatabase).each(function() {
+            var deviceId = '#device-'+this.class+'-'+this.type+'-'+this.id;
+            $(deviceId + ' .value').html(this.params.value);
+
             if (this.type == 6) {
-                $('#class').html(this.class);
-                $('#type').html(this.type);
-                $('#id').html(this.id);
-                $('#value').html(this.params.value);
                 var unit;
                 switch (parseInt(this.params.unit)) {
                     case 0: unit = "K";
                     case 1: unit = "C";
                     case 2: unit = "F";    
                 }
-                $('#unit').html(unit);
-            }
+                $(deviceId + ' .unit').html(unit);
+            } 
         });
     };
 
