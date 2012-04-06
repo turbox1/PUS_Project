@@ -33,7 +33,7 @@ App.Deamon = function() {
     var _options = {
         url     : "cgi-bin/vscpc.cgi",
         data    : "class=15&type=0",
-        interval: 5000
+        interval: 3000
     };
 
     var run = function() {
@@ -76,8 +76,8 @@ App.Builder = (function() {
                 var unit;
                 switch (parseInt(this.params.unit)) {
                     case 0: unit = "K";
-                    case 1: unit = "C";
-                    case 2: unit = "F";    
+                    case 1: unit = "F";
+                    case 2: unit = "C";    
                 }
                 $(deviceId + ' .unit').html(unit);
             } 

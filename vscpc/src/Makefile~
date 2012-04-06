@@ -1,0 +1,10 @@
+all: vscpc.cgi
+
+vscpc.cgi: vscpc.o
+	$(CC) $(LFLAGS) $(CFLAGS) vscpc.o -o vscpc.cgi
+
+vscpc.o: vscpc.c vscp_frame.h
+	$(CC) $(CFLAGS) vscpc.c -c 
+
+clean:
+	rm -f *.c

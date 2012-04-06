@@ -4,7 +4,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <cgi.h>
-#include "../../VSCP/src/vscp_frame.h"
+#include "vscp_frame.h"
 
 #define CLASS "\"class\""
 #define TYPE "\"type\""
@@ -17,6 +17,9 @@
 //--- function ---
 void print_all_frame(const int dev_numb, struct vscp_frame* vf);
 char* give_params(struct vscp_frame* vf);
+
+//--- global_variable ---
+s_cgi *cgi;
 
 
 int main() {
@@ -36,18 +39,19 @@ int main() {
   daddr.sin_port = htons(9999);
   daddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
-  char _class[4];
-  char _type[4];
+  char* _class = NULL;
+  char* _type = NULL;
   int  dev_numb = -1;
-  int  i;
+  unsigned char  i;
   struct vscp_frame* in_frame = NULL;
   
-  cgi_init();
-  cgi_process_form();
-  cgi_init_headers();
+  cgi = cgiInit();
+  cgiHeader();
+  
+  _class = cgiGetValue(cgi, "class");
+  _type = cgiGetValue(cgi, "type");
 
-  strcpy(_class, cgi_param("class"));
-  strcpy(_type, cgi_param("type"));  
+
   struct vscp_frame v_frame;
   memset((void*)&v_frame, 0, sizeof(struct vscp_frame));
   v_frame.v_class = atoi(_class);
@@ -65,7 +69,7 @@ int main() {
 
 
   close(udp_fd);
-  cgi_end();
+  cgiFree(cgi);
   return 0;
 }
 
@@ -82,6 +86,7 @@ void print_all_frame(const int dev_numb, struct vscp_frame* vf) {
   printf("]");
 }
 
+
 char* give_params(struct vscp_frame* vf) {
   char *tmp = (char*)malloc(128*sizeof(unsigned char));
   if(vf->v_class == 10) {
@@ -91,11 +96,11 @@ char* give_params(struct vscp_frame* vf) {
 
     switch(vf->v_type) {
     case 6:
-      sprintf(tmp, "%s: \"%lf\", %s: \"%d\"", VAL, (float)(val/10.), UNIT, 1);
+      sprintf(tmp, "%s: \"%lf\", %s: \"%d\"", VAL, (float)(val/100.), UNIT, 1);
       break;
     
     case 35:
-      sprintf(tmp, "%s: \"%d\"", VAL, val);
+      sprintf(tmp, "%s: \"%lf\"", VAL, (float)(val/100.));
       break;
     }
   }
