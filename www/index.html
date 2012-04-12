@@ -2,40 +2,30 @@
     <head>
         <title>Strona główna</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <link rel="stylesheet" type="text/css" href="style.css" media="screen" />
         <script type="text/javascript" src="jquery.min.js"></script>
         <script type="text/javascript" src="./test.js"></script>
-        <style>
-            div, p {
-                margin: 4px;
-                padding: 0px;
-            }
-            .deviceBox {
-                border: 1px solid #333;
-                height: 50px;
-                width: 200px;
-                padding: 10px;
-            }
-        </style>
     </head>
     <body>
-        <a href="#" id="send-link">Akcja</a>
-        <div id="device-10-6-0" class="deviceBox">
-            <p>Temperatura</p>
-            <div>
-                <span>Wartość: </span>
-                <span class="value"></span>
-                <span class="unit"><span>
+        <div id="wrapper">
+            <div id="device-10-6-0" class="deviceBox">
+                <h2><strong>Temperatura</strong></h2>
+                <div>
+                    <span>Wartość: </span>
+                    <span class="value"></span>
+                    <span class="unit"><span>
+                </div>
             </div>
-        </div>
         
-        <div id="device-10-35-0" class="deviceBox">
-            <p>Wilgotność</p>
-            <div>
-                <span>Wartość: </span>
-                <span class="value"></span>
-                <span class="unit">%RH</span>
+            <div id="device-10-35-0" class="deviceBox">
+                <h2><strong>Wilgotność</strong></h2>
+                <div>
+                    <span>Wartość: </span>
+                    <span class="value"></span>
+                    <span class="unit">%RH</span>
+		            <progress id="humidity_progress" value="30" max="100">
+                </div>
             </div>
-        </div>
-
+	    </div>
     </body>
 </html>

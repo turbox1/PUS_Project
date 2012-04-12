@@ -1,0 +1,28 @@
+body {
+    font: 12px Arial;
+	color: #fff;
+	background: #333;
+}
+
+div, p {
+    margin: 4px;
+    padding: 0px;
+	background: #666;
+}
+
+.deviceBox {
+    border: 1px solid #f4f4f4;
+    height: 80px;
+    width: 200px;
+    padding: 10px;
+	float: left;
+}
+
+#wrapper {
+    width: 600px;
+	align: center;
+	margin: 0px auto;
+	padding: 0px;
+}
+	    
+

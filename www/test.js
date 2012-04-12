@@ -33,7 +33,7 @@ App.Deamon = function() {
     var _options = {
         url     : "cgi-bin/vscpc.cgi",
         data    : "class=15&type=0",
-        interval: 3000
+        interval: 1000000
     };
 
     var run = function() {
@@ -76,11 +76,14 @@ App.Builder = (function() {
                 var unit;
                 switch (parseInt(this.params.unit)) {
                     case 0: unit = "K";
-                    case 1: unit = "F";
+                    case 1: unit = "C";
                     case 2: unit = "C";    
                 }
                 $(deviceId + ' .unit').html(unit);
             } 
+            else if(this.type == 35) {
+		        $('#humidity_progress').val(this.params.value);
+	        }
         });
     };
 
