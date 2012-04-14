@@ -3,29 +3,48 @@
         <title>Strona główna</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <link rel="stylesheet" type="text/css" href="style.css" media="screen" />
-        <script type="text/javascript" src="jquery.min.js"></script>
-        <script type="text/javascript" src="./test.js"></script>
+        <script type="text/javascript" src="/js/jquery.min.js"></script>
+        <script type="text/javascript" src="/js/underscore.js"></script>
+        <script type="text/javascript" src="/js/backbone.js"></script>
+        
     </head>
     <body>
-        <div id="wrapper">
-            <div id="device-10-6-0" class="deviceBox">
-                <h2><strong>Temperatura</strong></h2>
-                <div>
-                    <span>Wartość: </span>
-                    <span class="value"></span>
-                    <span class="unit"><span>
-                </div>
-            </div>
-        
-            <div id="device-10-35-0" class="deviceBox">
-                <h2><strong>Wilgotność</strong></h2>
-                <div>
-                    <span>Wartość: </span>
-                    <span class="value"></span>
-                    <span class="unit">%RH</span>
-		            <progress id="humidity_progress" value="30" max="100">
-                </div>
-            </div>
-	    </div>
+        <div id="ApplicationContainer">
+            <ul id="DevicesList"></ul>
+        </div>
+
+<!-- Templates -->
+<script type="text/template" id="thermometer-template">
+    <div class="view deviceBox">
+        <h2><strong>Termometr</strong></h2>
+        <div>
+            <span>Urządzenie: </span>
+            <span>#<%= no %></span>
+        </div>
+        <div>
+            <span>Wartość: </span>
+            <span><%= value %></span>
+            <span><%= unit %></unit>
+        </div>
+    </div>
+</script>
+
+<script type="text/template" id="hygrometer-template">
+    <div class="view deviceBox">
+        <h2><strong>Wilgotnościomierz</strong></h2>
+        <div>
+            <span>Urządzenie: </span>
+            <span>#<%= no %></span>
+        </div>
+        <div>
+            <span>Wartość: </span>
+            <span><%= value %></span>
+            <span><%= unit %></unit>
+            <progress value="<%= value %>" max="100" >
+        </div>
+    </div>
+</script>
+
+<script type="text/javascript" src="/js/test.js"></script>
     </body>
 </html>
