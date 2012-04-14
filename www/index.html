@@ -19,12 +19,13 @@
         <h2><strong>Termometr</strong></h2>
         <div>
             <span>Urządzenie: </span>
-            <span>#<%= no %></span>
+            <span>#<%= id %></span>
         </div>
         <div>
             <span>Wartość: </span>
             <span><%= value %></span>
             <span><%= unit %></unit>
+            <meter min="-50" max="100" value="<%= value %>">
         </div>
     </div>
 </script>
@@ -34,13 +35,13 @@
         <h2><strong>Wilgotnościomierz</strong></h2>
         <div>
             <span>Urządzenie: </span>
-            <span>#<%= no %></span>
+            <span>#<%= id %></span>
         </div>
         <div>
             <span>Wartość: </span>
             <span><%= value %></span>
             <span><%= unit %></unit>
-            <progress value="<%= value %>" max="100" >
+            <meter min="0" max="100" value="<%= value %>">
         </div>
     </div>
 </script>
