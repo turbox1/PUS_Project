@@ -1,327 +1,277 @@
-$(document).ready(function() {
-    $('#send-link').click(function() {
-        $.ajax({
-            url: 'cgi-bin/vscpc.cgi',
-           // url: 'test.json',
-            dataType: 'json',
-            data: "class=20&type=10&data=222",
-            success: function(data) {
-                var a = data;
-                $('#class').append(a.class);
-                $('#type').append(a.type);
-                $('#data').append(a.data);
-            }
-        });
-        return false;
+
+
+$(function() {
+    
+    // models
+    var Thermometer = Backbone.Model.extend({
+    
+        defaults: {
+            class: null,
+            type: null,
+            id: null,
+            did: null,
+            value: 0,
+            unit: "&deg;C",
+        },
+
+        initialize: function() {}
     });
-});
 
+    var Hygrometer = Backbone.Model.extend({
     
+        defaults: {
+            class: null,
+            type: null,
+            id: null,
+            did: null,
+            value: 0,
+            unit: "%RH"
+        },
 
-var App = {
-    
-    options: {},
+        initialize: function() {}
+    });
 
-    run: function() {
-        var self = this;
-        self.Deamon().run();
-    }
+    // collections
+    var ThermometerCollection = Backbone.Collection.extend({
+        model: Thermometer
+    });
 
-};
+    var HygrometerCollection = Backbone.Collection.extend({
+        model: Hygrometer
+    });
 
 
-App.Builder = (function() { 
+    var thermometerCollection = new ThermometerCollection();
+    var hygrometerCollection = new HygrometerCollection();
 
-    var _devicesDatabase;
-    
-    function _addData(data) {
-        _devicesDatabase = data;
-    };
+    // views
+    var ThermometerView = Backbone.View.extend({
 
-    function _refreshAll() {
-        $(_devicesDatabase).each(function() {
-            var deviceId = '#device-'+this.class+'-'+this.type+'-'+this.id;
-            $(deviceId + ' .value').html(this.params.value);
+        tagName: "li",
+        template: _.template($("#thermometer-template").html()),
 
-            if (this.type == 6) {
-                var unit;
-                switch (parseInt(this.params.unit)) {
-                    case 0: unit = "K";
-                    case 1: unit = "C";
-                    case 2: unit = "C";    
-                }
-                $(deviceId + ' .unit').html(unit);
-            } 
-            else if(this.type == 35) {
-		        $('#humidity_progress').val(this.params.value);
-	        }
-        });
-    };
+        initialize: function() {
+            this.model.bind('change', this.render, this);
+        },
 
-    return {
-        update: function(data) {
-            _addData(data);
-            _refreshAll(); 
+        render: function() {
+            this.$el.html(this.template(this.model.toJSON()));
+            return this;
         }
-    }
+    });
 
-}());
+    var HygrometerView = Backbone.View.extend({
 
+        tagName: "li",
+        template: _.template($("#hygrometer-template").html()),
 
-var Thermometer = Backbone.Model.extend({
-    
-    defaults: {
-        class: null,
-        type: null,
-        id: null,
-        did: null,
-        no: 1,
-        value: 20,
-        unit: "&deg;C",
-    },
+        initialize: function() {
+            this.model.bind('change', this.render, this);
+        },
 
-    initialize: function() {
-    console.log('reset');
-        this.bind("reset", this.updateView)
-    },
+        render: function() {
+            this.$el.html(this.template(this.model.toJSON()));
+            return this;
+        }
+    });
 
-    updateView: function() {
-        this.model.destroy();
-        this.view.remove();
-        //this.model.destroy();
-        //this.view.render();
-    }
-});
+    var DeviceFactory = (function() {  
+        var _thermometer = function(data) {
 
-var Hygrometer = Backbone.Model.extend({
-    
-    defaults: {
-        class: null,
-        type: null,
-        id: null,
-        did: null,
-        no: 1,
-        value: 20,
-        unit: "%RH",
-    },
-
-    initialize: function() {
-        console.log('sssssss');
-    }
-});
-
-var thermometer1 = new Thermometer({value: 10, no: 1});
-var thermometer2 = new Thermometer({value: 30, no: 2});
-
-
-var hygrometer1 = new Hygrometer({value: 10, no: 1});
-var hygrometer2 = new Hygrometer({value: 70, no: 2});
-
-var ThermometerCollection = Backbone.Collection.extend({
-    model: Thermometer
-});
-
-var HygrometerCollection = Backbone.Collection.extend({
-    model: Hygrometer
-});
-
-
-var thermometerCollection = new ThermometerCollection();
-
-var hygrometerCollection = new HygrometerCollection();
-
-var ThermometerView = Backbone.View.extend({
-
-    tagName: "li",
-    template: _.template($("#thermometer-template").html()),
-
-    initialize: function() {
-        this.model.bind('change', this.render, this);
-        this.bind("reset", this.updateView)
-    },
-
-    updateView: function() {
-    console.log('eeeeeReset');
-        this.model.destroy();
-        this.view.remove();
-        //this.model.destroy();
-        //this.view.render();
-    },
-
-    render: function() {
-      this.$el.html(this.template(this.model.toJSON()));
-      return this;
-    },
-
-    remove: function() {
-    console.log('REMOCE');
-        this.model.updateView(); 
-    }
-});
-
-var HygrometerView = Backbone.View.extend({
-
-    tagName: "li",
-    template: _.template($("#hygrometer-template").html()),
-
-    initialize: function() {
-        this.model.bind('change', this.render, this);
-    },
-
-    render: function() {
-      this.$el.html(this.template(this.model.toJSON()));
-      return this;
-    }
-});
-
-var DeviceFactory = { 
-    
-    make: function(data) {
-        if (data.class == 10 && data.type == 6) 
-        {
             var unit;
-            switch (parseInt(data.params.unit)) 
-            {
+            switch (parseInt(data.params.unit)) {
                 case 0: unit = "K";
                 case 1: unit = "&deg;C";
-                case 2: unit = "&deg;C";    
+                case 2: unit = "&deg;C";
+                default: unit = "&deg;C"; 
             }
             
-            if (thermometerCollection.get(data.id))
-            {
+            if (thermometerCollection.get(data.id)) {
                 thermometerCollection.get(data.id).set({value: data.params.value});
             } 
-            else 
-            {
-                thermometerCollection.push(
-                    new Thermometer({
-                        class:  data.class,
-                        type:   data.type,
-                        id:     data.id,
-                        value:  data.params.value,
-                        unit:   unit
-                    })
-                );
+            else {
+                var model = new Thermometer({
+                    class:  data.class,
+                    type:   data.type,
+                    id:     data.id,
+                    value:  data.params.value,
+                    unit:   unit
+                });
+                thermometerCollection.push(model);
+                var view = new ThermometerView({model: model});
+                $("#DevicesList").append(view.render().el);
             }
-        }
-        else if(data.class == 10 && data.type == 35) 
-        {
-            if (hygrometerCollection.get(data.id))
-            {
+        };
+
+        var _hygrometer = function(data) {
+
+            if (hygrometerCollection.get(data.id)) {
                 hygrometerCollection.get(data.id).set({value: data.params.value});
             }
-            else
-            {
-                hygrometerCollection.add(
-                    new Hygrometer({
-                        class:  data.class,
-                        type:   data.type,
-                        id:     data.id,
-                        value:  data.params.value
-                    })
-                );
+            else {
+                var model = new Hygrometer({
+                    class:  data.class,
+                    type:   data.type,
+                    id:     data.id,
+                    value:  data.params.value
+                })
+            
+                hygrometerCollection.push(model);
+                var view = new HygrometerView({model: model});
+                $("#DevicesList").append(view.render().el);
 	        }
+        }; 
+
+        return {
+            make: function(data) {
+                if (data.class == 10) {
+                    if (data.type == 6) {
+                        _thermometer(data);
+                    }
+                    else if (data.type == 35) {
+                        _hygrometer(data);
+                    }
+                }
+            }
+        };
+    }());
+
+    var MockDeamon = (function() {
+    
+        var _options = {
+            interval: 2000,
+            a: -1,
+            data: [
+                [
+                    {"class":10, "type":6, "id":21, params: {"unit":0, "value":"0"}},
+                    {"class":10, "type":35, "id":3, params: {"value":"14"}}
+                ],
+                [
+                    {"class":10, "type":6, "id":22, params: {"unit":0, "value":"10"}},
+                    {"class":10, "type":35, "id":3, params: {"value":"84"}},
+                    {"class":10, "type":6,  "id":2, params: {"value":"23"}},
+                    {"class":10, "type":35, "id":4, params: {"value":"33"}},
+                ],
+                [
+                    {"class":10, "type":6, "id":22, params: {"unit":0, "value":"34"}},
+                    {"class":10, "type":35, "id":3, params: {"value":"72"}},
+                    {"class":10, "type":6,  "id":2, params: {"value":"26"}},
+                    {"class":10, "type":35, "id":4, params: {"value":"34"}},
+                ],
+                [
+                    {"class":10, "type":6, "id":22, params: {"unit":0, "value":"37"}},
+                    {"class":10, "type":35, "id":3, params: {"value":"64"}},
+                    {"class":10, "type":6,  "id":2, params: {"value":"22"}},
+                    {"class":10, "type":35, "id":4, params: {"value":"35"}},
+                ],
+                [
+                    {"class":10, "type":6, "id":22, params: {"unit":0, "value":"39"}},
+                    {"class":10, "type":35, "id":3, params: {"value":"54"}},
+                    {"class":10, "type":6,  "id":2, params: {"value":"20"}},
+                    {"class":10, "type":35, "id":4, params: {"value":"36"}},
+                ],
+                [
+                    {"class":10, "type":6, "id":22, params: {"unit":0, "value":"43"}},
+                    {"class":10, "type":35, "id":3, params: {"value":"47"}},
+                    {"class":10, "type":6,  "id":2, params: {"value":"18"}},
+                    {"class":10, "type":35, "id":4, params: {"value":"38"}},
+                ],
+                [
+                    {"class":10, "type":6, "id":22, params: {"unit":0, "value":"46"}},
+                    {"class":10, "type":35, "id":3, params: {"value":"40"}},
+                    {"class":10, "type":6,  "id":2, params: {"value":"14"}},
+                    {"class":10, "type":35, "id":4, params: {"value":"39"}},
+                ],
+                [
+                    {"class":10, "type":6, "id":22, params: {"unit":0, "value":"52"}},
+                    {"class":10, "type":35, "id":3, params: {"value":"23"}},
+                    {"class":10, "type":6,  "id":2, params: {"value":"11"}},
+                    {"class":10, "type":35, "id":4, params: {"value":"41"}},
+                ],
+            ],
+        };
+
+        var run = function() {
+            var self = this;
+            (function worker() {
+         
+                setTimeout(worker, self.getOptions.interval);
+         
+                if (self.getOptions.a > -1) {
+                    App.updateDevices(self.getOptions.data[self.getOptions.a]);
+                }
+                
+                if (self.getOptions.a ==  7) {
+                    self.getOptions.a = 0;
+                }
+                self.getOptions.a++;
+            })();
         }
-    }
-};
 
-var AppView = Backbone.View.extend({
-   
-    el: $("#ApplicationContainer"),
+        return {
+            run: run,
+            getOptions: _options
+        }
+    }());
 
-    data: [{"class":10, "type":6, "id":21, params: {"unit":0, "value":"0"}},{"class":10, "type":35, "id":3, params: {"value":"14"}}],
-
-    data2: [{"class":10, "type":6, "id":22, params: {"unit":0, "value":"10"}},{"class":10, "type":35, "id":3, params: {"value":"54"}}],
+    var Deamon = (function() {
     
-    initialize: function() {
-        $(this.data).each(function() {
-            DeviceFactory.make(this);
-        });
-    
-        this.addAll();
-    },
+        var _options = {
+            url     : "cgi-bin/vscpc.cgi",
+            data    : "class=15&type=0",
+            interval: 5000
+        };
 
-    updateDevices: function() {
-        this.$("#DevicesList").html('');
-        thermometerCollection.reset();
-        hygrometerCollection.reset();
-        $(this.data2).each(function() {
-            DeviceFactory.make(this);
-        });
-        this.addAll();
-    },
-
-    render: function() {},
-
-    addOne: function(model) {
-        // Tutaj należy zdecydować co to jest za model. najlepiej utworzyć do tego osobny obiekt, 
-        // który będzie za to odpowiedzialny
-
-      var view = new ThermometerView({model: model});
-      this.$("#DevicesList").append(view.render().el);
-    },
-
-    // Tymczasowe rozbicie na dwie metody
-    addOne2: function(model) {
-        // Tutaj należy zdecydować co to jest za model. najlepiej utworzyć do tego osobny obiekt, 
-        // który będzie za to odpowiedzialny
-
-      var view = new HygrometerView({model: model});
-      this.$("#DevicesList").append(view.render().el);
-    },
-
-    addAll: function() {
-      thermometerCollection.each(this.addOne);
-      hygrometerCollection.each(this.addOne2);
-    },
-  });
-
-var Appa = new AppView;
-
-var Deamon = function() {
-    
-    var _options = {
-        url     : "cgi-bin/vscpc.cgi",
-        data    : "class=15&type=0",
-        interval: 5000,
-        a: 0
-    };
-
-    var run = function() {
-        var self = this;
-        (function worker() {
-         console.log('ad');
-         
-         setTimeout(worker, self.getOptions.interval);
-         
-         if (self.getOptions.a > 0) {
-             Appa.updateDevices();
-        } 
-        self.getOptions.a++;
-/*
+        var run = function() {
+            var self = this;
+            (function worker() {
                 $.ajax({
                     url: self.getOptions.url,
                     dataType: 'json',
                     data: self.getOptions.data,
                     success: function(response) {
-//                        App.Builder.update(response);
-                        Appa.updateDevices();
+                        App.updateDevices(response);
                     },
                     complete: function() {
                         setTimeout(worker, self.getOptions.interval);
                     }
-                });*/
-        })();
-    }
+                });
+            })();
+        }
 
-    return {
-        run: run,
-        getOptions: _options
-    }
-};
-Deamon().run();
+        return {
+            run: run,
+            getOptions: _options
+        }
+    }());
 
-//var app = App;
-//app.run(); 
+    var Deamon = MockDeamon;
+
+
+    var AppView = Backbone.View.extend({
+   
+        el: $("#ApplicationContainer"),
+    
+        initialize: function() {
+            Deamon.run();
+        },
+
+        updateDevices: function(data) {
+            this.$("#DevicesList").html('');
+            thermometerCollection.reset();
+            hygrometerCollection.reset();
+            $(data).each(function() {
+                DeviceFactory.make(this);
+            });
+        },
+
+        render: function() {}
+    });
+
+
+    // finally start app
+    var App = new AppView;
+
+}); //end of application
 
 
