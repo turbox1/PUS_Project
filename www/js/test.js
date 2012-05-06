@@ -1,7 +1,53 @@
 
 
 $(function() {
-    
+    $("#createRoom").click(function () {
+		$("#DevicesTree").jstree("create",-1,"first","Podaj nazwę");
+        //console.log($("#DevicesTree").jstree("get_json")); 
+	});
+    $("#DevicesTree")
+	    .jstree({
+		    core : { 
+                "initially_open" : [ "aDevices" ]
+            },
+            "types" : {
+			    "valid_children" : [ "root" ],
+			    "types" : {
+				    "root" : {
+					    "icon" : { 
+						    "image" : "/js/jstree/_docs/_drive.png" 
+					    },
+    					"valid_children" : [ "default" ],
+	    				"max_depth" : 2,
+		    			"hover_node" : false,
+			    		"select_node" : function (node , check , e) {
+                            console.info('Dodaje urządzenia z wybranego pokoju do szczegółowego widoku.');
+
+                            $("#DevicesList").html('');
+                            node.find('li').each(function(index) {
+                                var dId = $(this).attr('id').substr(8).split("-");
+                                //console.log(dId);
+                                //$('#aDevices ul').html('');
+                                DeviceFactory.update({
+                                    "class": dId[0],
+                                    "type": dId[1],
+                                    "id": dId[2]
+                                });
+                            });
+                            //return false;
+                        }
+				    },
+    				"default" : {
+	    				"valid_children" : [ "default" ]
+                    }
+                }
+            },
+            "html_data" : {
+			    "data" : "<li id='aDevices' rel='root'><a href='#'>Dostępne urządzenia</a></li>"
+	    	},
+    		plugins : [ "themes", "html_data", "json_data", "types", "ui", "crrm", "dnd", "cookies"]
+	});
+
     // models
     var Thermometer = Backbone.Model.extend({
     
@@ -88,6 +134,7 @@ $(function() {
             
             if (thermometerCollection.get(data.id)) {
                 thermometerCollection.get(data.id).set({value: data.params.value});
+                console.log(data.params.value);
             } 
             else {
                 var model = new Thermometer({
@@ -98,8 +145,8 @@ $(function() {
                     unit:   unit
                 });
                 thermometerCollection.push(model);
-                var view = new ThermometerView({model: model});
-                $("#DevicesList").append(view.render().el);
+                //var view = new ThermometerView({model: model});
+                //$("#DevicesList").append(view.render().el);
             }
         };
 
@@ -117,10 +164,18 @@ $(function() {
                 })
             
                 hygrometerCollection.push(model);
-                var view = new HygrometerView({model: model});
-                $("#DevicesList").append(view.render().el);
+                //var view = new HygrometerView({model: model});
+                //$("#DevicesList").append(view.render().el);
 	        }
         }; 
+
+        var _thermometer2 = function(data) {
+
+            var model = thermometerCollection.get(data.id)
+            var view = new ThermometerView({model: model});
+            $("#DevicesList").append(view.render().el);
+        };
+
 
         return {
             make: function(data) {
@@ -132,14 +187,47 @@ $(function() {
                         _hygrometer(data);
                     }
                 }
+            },
+            update: function(data) {
+                if (data.type == 6) {
+                    _thermometer2(data);
+                }
+                else if (data.type == 35) {
+                    _hygrometer2(data);
+                }
             }
         };
     }());
 
+     var TreeFactory = (function() {  
+       
+        return {
+            make: function(data) {
+                if (data.class == 10) {
+                    if (data.type == 6) {
+                        $("#DevicesTree").jstree("create",
+                            "#aDevices",
+                            false,
+                            {
+                               "attr": { "id" : "tDevice-"+data.class+"-"+data.type+"-"+data.id  },
+                               "data": "Termometr"+data.id
+                            },
+                            false, true);
+
+                    }
+                    //else if (data.type == 35) {
+                        //
+                    //}
+                }
+            }
+        };
+    }());
+
+
     var MockDeamon = (function() {
     
         var _options = {
-            interval: 2000,
+            interval: 5000,
             a: -1,
             data: [
                 [
@@ -217,9 +305,10 @@ $(function() {
     var Deamon = (function() {
     
         var _options = {
-            url     : "cgi-bin/vscpc.cgi",
+            url     : "server.php",
             data    : "class=15&type=0",
-            interval: 5000
+            interval: 5000,
+            a       : 0
         };
 
         var run = function() {
@@ -228,9 +317,14 @@ $(function() {
                 $.ajax({
                     url: self.getOptions.url,
                     dataType: 'json',
-                    data: self.getOptions.data,
+                    data: self.getOptions.data+"&i="+self.getOptions.a,
                     success: function(response) {
-                        App.updateDevices(response);
+                        if (self.getOptions.a ==  2) {
+                            self.getOptions.a = -1;
+                        }
+                        self.getOptions.a++;
+
+                        App.updateDevices(response.data);
                     },
                     complete: function() {
                         setTimeout(worker, self.getOptions.interval);
@@ -245,7 +339,7 @@ $(function() {
         }
     }());
 
-    var Deamon = MockDeamon;
+    //var Deamon = MockDeamon;
 
 
     var AppView = Backbone.View.extend({
@@ -257,11 +351,13 @@ $(function() {
         },
 
         updateDevices: function(data) {
-            this.$("#DevicesList").html('');
-            thermometerCollection.reset();
-            hygrometerCollection.reset();
+            //this.$("#DevicesList").html('');
+            //thermometerCollection.reset();
+            //hygrometerCollection.reset();
+            $('#aDevices ul').html('');
             $(data).each(function() {
                 DeviceFactory.make(this);
+                TreeFactory.make(this);
             });
         },
 
@@ -269,8 +365,13 @@ $(function() {
     });
 
 
+    
+    
+
     // finally start app
     var App = new AppView;
+
+    
 
 }); //end of application
 

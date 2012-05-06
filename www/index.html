@@ -3,12 +3,21 @@
         <title>Strona główna</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+        <link type="text/css" rel="stylesheet" href="js/jstree/_docs/syntax/!style.css"/>
+    	<link type="text/css" rel="stylesheet" href="js/jstree/_docs/!style.css"/>
         <script type="text/javascript" src="/js/jquery.min.js"></script>
         <script type="text/javascript" src="/js/underscore.js"></script>
         <script type="text/javascript" src="/js/backbone.js"></script>
-        
+        <script type="text/javascript" src="/js/jstree/jquery.cookie.js"></script>
+    	<script type="text/javascript" src="/js/jstree/jquery.jstree.js"></script> 
     </head>
     <body>
+        <input id="createRoom" class="button" type="button" style="float:left;" value="Dodaj pokój" >
+        <div id="DevicesTree" class="demo jstree jstree-0 jstree-default">
+
+        </div>
+
+
         <div id="ApplicationContainer">
             <ul id="DevicesList"></ul>
         </div>
