@@ -3,29 +3,73 @@
         <title>Strona główna</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <link rel="stylesheet" type="text/css" href="style.css" media="screen" />
-        <script type="text/javascript" src="jquery.min.js"></script>
-        <script type="text/javascript" src="./test.js"></script>
+        <link type="text/css" rel="stylesheet" href="js/jstree/_docs/syntax/!style.css"/>
+    	<link type="text/css" rel="stylesheet" href="js/jstree/_docs/!style.css"/>
+        <script type="text/javascript" src="/js/jquery.min.js"></script>
+        <script type="text/javascript" src="/js/underscore.js"></script>
+        <script type="text/javascript" src="/js/backbone.js"></script>
+        <script type="text/javascript" src="/js/jstree/jquery.cookie.js"></script>
+    	<script type="text/javascript" src="/js/jstree/jquery.jstree.js"></script> 
     </head>
     <body>
-        <div id="wrapper">
-            <div id="device-10-6-0" class="deviceBox">
-                <h2><strong>Temperatura</strong></h2>
-                <div>
-                    <span>Wartość: </span>
-                    <span class="value"></span>
-                    <span class="unit"><span>
-                </div>
-            </div>
-        
-            <div id="device-10-35-0" class="deviceBox">
-                <h2><strong>Wilgotność</strong></h2>
-                <div>
-                    <span>Wartość: </span>
-                    <span class="value"></span>
-                    <span class="unit">%RH</span>
-		            <progress id="humidity_progress" value="30" max="100">
-                </div>
-            </div>
-	    </div>
+        <input id="createRoom" class="button" type="button" style="float:left;" value="Dodaj pokój" >
+        <div id="DevicesTree" class="demo jstree jstree-0 jstree-default">
+
+        </div>
+
+
+        <div id="ApplicationContainer">
+            <ul id="DevicesList"></ul>
+        </div>
+
+<!-- Templates -->
+<script type="text/template" id="thermometer-template">
+    <div class="view deviceBox">
+        <h2><strong>Termometr</strong></h2>
+        <div>
+            <span>Urządzenie: </span>
+            <span>#<%= id %></span>
+        </div>
+        <div>
+            <span>Wartość: </span>
+            <span><%= value %></span>
+            <span><%= unit %></unit>
+            <meter min="-50" max="100" value="<%= value %>">
+        </div>
+    </div>
+</script>
+
+<script type="text/template" id="hygrometer-template">
+    <div class="view deviceBox">
+        <h2><strong>Wilgotnościomierz</strong></h2>
+        <div>
+            <span>Urządzenie: </span>
+            <span>#<%= id %></span>
+        </div>
+        <div>
+            <span>Wartość: </span>
+            <span><%= value %></span>
+            <span><%= unit %></unit>
+            <meter min="0" max="100" value="<%= value %>">
+        </div>
+    </div>
+</script>
+
+<script type="text/template" id="button-template">
+    <div class="view deviceBox">
+        <h2><strong>Przycisk</strong></h2>
+        <div>
+            <span>Urządzenie: </span>
+            <span>#<%= id %></span>
+        </div>
+        <div>
+            <span>Wartość: </span>
+            <span><%= type %></span>
+            <button class="save-button" href="#">Włącz/Wyłącz</button>
+        </div>
+    </div>
+</script>
+
+<script type="text/javascript" src="/js/test.js"></script>
     </body>
 </html>
