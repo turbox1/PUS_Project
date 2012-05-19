@@ -1,6 +1,16 @@
 
 
 $(function() {
+    
+    // główny obiekt aplikacji
+    // options - konfiguracja
+    var App = {
+        options: {
+            url: 'server.php'
+        },
+        view: {}
+    }
+     
     $("#createRoom").click(function () {
 		$("#DevicesTree").jstree("create",-1,"first","Podaj nazwę");
         //console.log($("#DevicesTree").jstree("get_json")); 
@@ -21,7 +31,7 @@ $(function() {
 	    				"max_depth" : 2,
 		    			"hover_node" : false,
 			    		"select_node" : function (node , check , e) {
-                            console.info('Dodaje urządzenia z wybranego pokoju do szczegółowego widoku.');
+                            //console.info('Dodaje urządzenia z wybranego pokoju do szczegółowego widoku.');
 
                             $("#DevicesList").html('');
                             node.find('li').each(function(index) {
@@ -42,6 +52,22 @@ $(function() {
                     }
                 }
             },
+            "crrm" : { 
+			    "move" : {
+			    	"check_move" : function (m) {
+                        // całe dzrzewko ktore potrzeba zapisac
+                        //var list = $(this.get_container()).children('ul').children().not('#aDevices');
+                        var deviceToMove = "#"+$(m.o).attr('id');
+
+                        if ($(m.np).children('ul').find(deviceToMove).not(m.o).length) 
+                        {
+                            return false;
+                        }
+
+                        return true;
+			    	}
+	    		}
+    		},
             "html_data" : {
 			    "data" : "<li id='aDevices' rel='root'><a href='#'>Dostępne urządzenia</a></li>"
 	    	},
@@ -77,6 +103,30 @@ $(function() {
         initialize: function() {}
     });
 
+    var Button = Backbone.Model.extend({
+        dafaults: {
+            class: null,
+            type: null,
+            id: null,
+            did: null,
+            value: 0
+        },
+
+        initialize: function() {},
+
+        send: function() {
+            var status = (this.get('type') == 4) ? 0 : 1;
+            $.ajax({
+                url: App.options.url,
+                dataType: 'json',
+                data: "class="+this.get('class')+"&type=1&id="+this.get('id')+"&value="+status,
+                success: function(response) {
+                    App.view.updateDevices(response.data);
+                }
+            });
+        }
+    });
+
     // collections
     var ThermometerCollection = Backbone.Collection.extend({
         model: Thermometer
@@ -86,9 +136,13 @@ $(function() {
         model: Hygrometer
     });
 
+    var ButtonCollection = Backbone.Collection.extend({
+        model: Button
+    });
 
     var thermometerCollection = new ThermometerCollection();
     var hygrometerCollection = new HygrometerCollection();
+    var buttonCollection = new ButtonCollection();
 
     // views
     var ThermometerView = Backbone.View.extend({
@@ -121,6 +175,33 @@ $(function() {
         }
     });
 
+    var ButtonView = Backbone.View.extend({
+        
+        tagName: "li",
+        template: _.template($('#button-template').html()),
+
+        events: {
+            'click .save-button': 'saveClick'
+        },
+
+
+        initialize: function() {
+            this.model.bind('change', this.render, this);
+        },
+
+        render: function() {
+            var model = this.model.toJSON();
+            model.type = (model.type == 3) ? "Włączony" : "Wyłączony";
+            this.$el.html(this.template(model));
+            return this;
+        },
+
+        saveClick: function() {
+            this.model.send();
+        }
+    });
+
+
     var DeviceFactory = (function() {  
         var _thermometer = function(data) {
 
@@ -134,7 +215,6 @@ $(function() {
             
             if (thermometerCollection.get(data.id)) {
                 thermometerCollection.get(data.id).set({value: data.params.value});
-                console.log(data.params.value);
             } 
             else {
                 var model = new Thermometer({
@@ -145,8 +225,6 @@ $(function() {
                     unit:   unit
                 });
                 thermometerCollection.push(model);
-                //var view = new ThermometerView({model: model});
-                //$("#DevicesList").append(view.render().el);
             }
         };
 
@@ -164,18 +242,42 @@ $(function() {
                 })
             
                 hygrometerCollection.push(model);
-                //var view = new HygrometerView({model: model});
-                //$("#DevicesList").append(view.render().el);
 	        }
-        }; 
+        };
+
+        var _button = function(data) {
+
+            if (buttonCollection.get(data.id)) {
+                buttonCollection.get(data.id).set({type: data.type});
+            }
+            else {
+                var model = new Button({
+                    class:  data.class,
+                    type:   data.type,
+                    id:     data.id
+                })
+            
+                buttonCollection.push(model);
+	        }
+        };  
 
         var _thermometer2 = function(data) {
-
             var model = thermometerCollection.get(data.id)
             var view = new ThermometerView({model: model});
             $("#DevicesList").append(view.render().el);
         };
 
+        var _hygrometer2 = function(data) {
+            var model = hygrometerCollection.get(data.id)
+            var view = new HygrometerView({model: model});
+            $("#DevicesList").append(view.render().el);
+        };
+
+        var _button2 = function(data) {
+            var model = buttonCollection.get(data.id);
+            var view = new ButtonView({model: model});
+            $("#DevicesList").append(view.render().el);
+        };
 
         return {
             make: function(data) {
@@ -187,14 +289,26 @@ $(function() {
                         _hygrometer(data);
                     }
                 }
+                else if (data.class == 20) {
+                    if (data.type == 3 || data.type == 4) {
+                        _button(data);
+                    }
+                }
             },
             update: function(data) {
-                if (data.type == 6) {
-                    _thermometer2(data);
+                if (data.class == 10) {
+                    if (data.type == 6) {
+                        _thermometer2(data);
+                    }
+                    else if (data.type == 35) {
+                        _hygrometer2(data);
+                    }
                 }
-                else if (data.type == 35) {
-                    _hygrometer2(data);
-                }
+                else if (data.class == 20) {
+                    if (data.type == 3 || data.type == 4) {
+                        _button2(data);
+                    }
+                }                
             }
         };
     }());
@@ -209,15 +323,33 @@ $(function() {
                             "#aDevices",
                             false,
                             {
-                               "attr": { "id" : "tDevice-"+data.class+"-"+data.type+"-"+data.id  },
+                               "attr": { "id" : "tDevice-"+data.class+"-"+data.type+"-"+data.id },
                                "data": "Termometr"+data.id
                             },
                             false, true);
-
                     }
-                    //else if (data.type == 35) {
-                        //
-                    //}
+                    else if (data.type == 35) {
+                        $("#DevicesTree").jstree("create",
+                            "#aDevices",
+                            false,
+                            {
+                               "attr": { "id" : "tDevice-"+data.class+"-"+data.type+"-"+data.id },
+                               "data": "Hygrometr"+data.id
+                            },
+                            false, true);
+                    }
+                }
+                else if (data.class == 20) {
+                    if (data.type == 3 || data.type == 4) {
+                        $("#DevicesTree").jstree("create",
+                            "#aDevices",
+                            false,
+                            {
+                               "attr": { "id" : "tDevice-"+data.class+"-"+data.type+"-"+data.id },
+                               "data": "Przycisk"+data.id
+                            },
+                            false, true);
+                    } 
                 }
             }
         };
@@ -305,7 +437,7 @@ $(function() {
     var Deamon = (function() {
     
         var _options = {
-            url     : "server.php",
+//            url     : "server.php",
             data    : "class=15&type=0",
             interval: 5000,
             a       : 0
@@ -315,7 +447,7 @@ $(function() {
             var self = this;
             (function worker() {
                 $.ajax({
-                    url: self.getOptions.url,
+                    url: App.options.url,
                     dataType: 'json',
                     data: self.getOptions.data+"&i="+self.getOptions.a,
                     success: function(response) {
@@ -324,7 +456,7 @@ $(function() {
                         }
                         self.getOptions.a++;
 
-                        App.updateDevices(response.data);
+                        App.view.updateDevices(response.data);
                     },
                     complete: function() {
                         setTimeout(worker, self.getOptions.interval);
@@ -351,9 +483,6 @@ $(function() {
         },
 
         updateDevices: function(data) {
-            //this.$("#DevicesList").html('');
-            //thermometerCollection.reset();
-            //hygrometerCollection.reset();
             $('#aDevices ul').html('');
             $(data).each(function() {
                 DeviceFactory.make(this);
@@ -369,7 +498,7 @@ $(function() {
     
 
     // finally start app
-    var App = new AppView;
+    App.view = new AppView;
 
     
 
