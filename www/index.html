@@ -10,6 +10,7 @@
         <script type="text/javascript" src="/js/backbone.js"></script>
         <script type="text/javascript" src="/js/jstree/jquery.cookie.js"></script>
     	<script type="text/javascript" src="/js/jstree/jquery.jstree.js"></script> 
+    	<script type="text/javascript" src="/js/jquery.knob-1.1.1.js"></script> 
     </head>
     <body>
         <input id="createRoom" class="button" type="button" style="float:left;" value="Dodaj pokój" >
@@ -66,6 +67,7 @@
             <span>Wartość: </span>
             <span><%= type %></span>
             <button class="save-button" href="#">Włącz/Wyłącz</button>
+            <input class="knob" data-width="50" data-displayPrevious=true data-fgColor="#ffec03" data-skin="tron" data-thickness=".2" value="<%= rep %>" data-min="0" data-max="31">
         </div>
     </div>
 </script>
