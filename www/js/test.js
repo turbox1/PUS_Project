@@ -71,7 +71,7 @@ $(function() {
             "html_data" : {
 			    "data" : "<li id='aDevices' rel='root'><a href='#'>Dostępne urządzenia</a></li>"
 	    	},
-    		plugins : [ "themes", "html_data", "json_data", "types", "ui", "crrm", "dnd", "cookies"]
+    		plugins : [ "themes", "html_data", "json_data", "types", "ui", "crrm", "dnd", "cookies", "contextmenu"]
 	});
 
     // models
