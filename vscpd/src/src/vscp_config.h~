@@ -1,0 +1,28 @@
+#ifndef VSCP_CONFIG_H
+#define VSCP_CONFIG_H
+
+#include <stdio.h>
+
+
+//----------------------- define -------------------------
+#define DLE 0x10
+#define STX 0x02
+#define ETX 0x03
+#define BUF_SIZE 16
+
+
+//---------------------- typedef -------------------------
+typedef unsigned char  uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned int   uint32_t;
+
+
+//------------------- file_descryptors --------------------
+FILE* eeprom_fd;
+
+
+//------------------- global_variable ---------------------
+int serial_fd;
+uint8_t buf[BUF_SIZE];
+
+#endif

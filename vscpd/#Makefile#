@@ -27,7 +27,8 @@ TARGET_CFLAGS += \
 	-lpthread
 
 define Build/Prepare
-	cp -r src/* $(PKG_BUILD_DIR)
+	cp src/* $(PKG_BUILD_DIR)
+	cp ../libvscp/src/* $(PKG_BUILD_DIR)
 endef
 
 define Build/Compile

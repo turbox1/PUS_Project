@@ -1,0 +1,45 @@
+
+#ifndef VSCP_CONFIG_H
+#define VSCP_CONFIG_H
+
+#include <stdio.h>
+#include <pthread.h>
+
+//----------------------- define -------------------------
+#define DLE 0x10
+#define STX 0x02
+#define ETX 0x03
+#define BUF_SIZE 16
+
+
+//---------------------- typedef -------------------------
+typedef unsigned char  uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned int   uint32_t;
+
+
+//------------------- file_descryptors --------------------
+FILE* eeprom_fd;
+
+
+//------------------- global_variable ---------------------
+int serial_fd;
+uint8_t len;
+uint8_t buf[BUF_SIZE];
+pthread_mutex_t serial_mutex;
+
+//-------------------- eeprom_map -------------------------
+#define EEPROM_CRC              0x00
+#define EEPROM_NICKNAME         0x01
+#define EEPROM_MAJOR_VERSION    0x02
+#define EEPROM_MINOR_VERSION    0x03
+#define EEPROM_SUBMINOR_VERSION 0x04
+#define EEPROM_CTRL_BYTE        0x05
+#define EEPROM_ZONE             0x06
+#define EEPROM_SUBZONE          0x07
+#define EEPROM_GUID             0x08
+#define EEPROM_USER_ID			0x0D
+#define EEPROM_MANUFACTURER		0x12
+#define EEPROM_APP_REGISTER		0x1A
+
+#endif

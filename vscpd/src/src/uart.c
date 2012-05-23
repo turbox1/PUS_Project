@@ -7,7 +7,7 @@ int openPort(char* port, long speed) {
 		perror("openPort:");
 	} else {
 		fcntl(uartPort, F_SETFL, 0);
-		setSpeedPort(uartPort, 115200);
+		setSpeedPort(uartPort, speed);
 		set8N1(uartPort);
 	}
 
@@ -51,8 +51,8 @@ void set8N1(int uartPort) {
 	options.c_cflag &= ~CSIZE;
 	options.c_cflag |= CS8;
 
-	options.c_lflag = 0;//&= ~(ICANON | ECHO | ECHOE | ISIG);
-	options.c_oflag = 0;//&= ~OPOST;
+	options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); //=0
+	options.c_oflag &= ~OPOST; //=0
 	options.c_cc[VMIN]=1;
 	options.c_cc[VTIME]=0;
 
