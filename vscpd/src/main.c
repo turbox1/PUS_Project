@@ -253,7 +253,7 @@ void* one_second_thread_fun(void* arg) {
 
 
 void init_eeprom() {
-	uint8_t e_init[128];
+	uint8_t e_init[512];
 	memset(e_init, 0, sizeof(e_init));
 	printf("init_eeprom()\n");
 	
@@ -268,6 +268,9 @@ void init_eeprom() {
 	
 	e_init[EEPROM_APP_REGISTER+1] = 0x11;
 	e_init[EEPROM_APP_REGISTER+8] = 0x23;
+	
+	e_init[EEPROM_GUID] = 0x20;
+	e_init[EEPROM_GUID] = 0xEF;
 	
 	fseek(eeprom_fd, EEPROM_CRC, SEEK_SET);
 	fwrite(e_init, 1, sizeof(e_init), eeprom_fd);

@@ -31,7 +31,6 @@ TARGET_LDFLAGS += \
 
 define Build/Prepare
 	cp src/* $(PKG_BUILD_DIR)
-	cp ../libvscp/src/* $(PKG_BUILD_DIR)
 endef
 
 define Build/Compile

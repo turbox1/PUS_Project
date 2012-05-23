@@ -1391,8 +1391,15 @@ uint8_t vscp_getSubMinorVersion( void ) {
 /*!
 	Get GUID from permament storage
 */
-uint8_t vscp_getGUID( uint8_t idx ) { return idx; }
-void vscp_setGUID( uint8_t idx, uint8_t data ) { return; }
+uint8_t vscp_getGUID( uint8_t idx ) { 
+	fseek(eeprom_fd, EEPROM_GUID+idx, SEEK_SET);
+	return fgetc(eeprom_fd);
+}
+
+void vscp_setGUID( uint8_t idx, uint8_t data ) {
+	fseek(eeprom_fd, EEPROM_GUID+idx, SEEK_SET);
+	fputc(data, eeprom_fd);
+}
 
 /*!
 	User ID 0 idx=0
@@ -1515,7 +1522,7 @@ uint8_t vscp_getControlByte( void ) {
 		idx=0 - byte 0 MSB
 		idx=1 - byte 1 LSB
 */
-uint8_t vscp_getPageSelect( uint8_t idx ) { return 1; }
+uint8_t vscp_getPageSelect( uint8_t idx ) { return 0; }
 
 /*!
 	Set page select registers

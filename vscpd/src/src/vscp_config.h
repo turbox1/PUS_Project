@@ -54,7 +54,7 @@ pthread_mutex_t serial_mutex = PTHREAD_MUTEX_INITIALIZER;
 #define EEPROM_CTRL_BYTE        0x05
 #define EEPROM_ZONE             0x06
 #define EEPROM_SUBZONE          0x07
-#define EEPROM_GUID             0x08
+#define EEPROM_GUID             0x100
 #define EEPROM_USER_ID			0x0D
 #define EEPROM_MANUFACTURER		0x12
 #define EEPROM_APP_REGISTER		0x1A
