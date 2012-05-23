@@ -71,7 +71,7 @@ $(function() {
             "html_data" : {
 			    "data" : "<li id='aDevices' rel='root'><a href='#'>Dostępne urządzenia</a></li>"
 	    	},
-    		plugins : [ "themes", "html_data", "json_data", "types", "ui", "crrm", "dnd", "cookies"]
+    		plugins : [ "themes", "html_data", "json_data", "types", "ui", "crrm", "dnd", "cookies", "contextmenu"]
 	});
 
     // models
@@ -109,23 +109,28 @@ $(function() {
             type: null,
             id: null,
             did: null,
-            value: 0
+            value: 0,
+            rep: 0
         },
 
         initialize: function() {},
 
         send: function() {
             var status = (this.get('type') == 4) ? 0 : 1;
-            $.ajax({
-                url: App.options.url,
-                dataType: 'json',
-                data: "class="+this.get('class')+"&type=1&id="+this.get('id')+"&value="+status,
-                success: function(response) {
-                    App.view.updateDevices(response.data);
-                }
-            });
+            ButtonSender(this.get('class'), this.get('id'), status, this.get('rep'));
         }
     });
+
+    var ButtonSender = function(classVar, id, statusVar, repeat) {
+        $.ajax({
+            url: App.options.url,
+            dataType: 'json',
+            data: "class="+classVar+"&type=1&id="+id+"&value="+statusVar+"&repeat="+repeat,
+            success: function(response) {
+                App.view.updateDevices(response.data);
+            }
+        });
+    };
 
     // collections
     var ThermometerCollection = Backbone.Collection.extend({
@@ -191,8 +196,15 @@ $(function() {
 
         render: function() {
             var model = this.model.toJSON();
+            var modelObj = this.model;
             model.type = (model.type == 3) ? "Włączony" : "Wyłączony";
             this.$el.html(this.template(model));
+            $(".knob").val(modelObj.get('rep')).knob({
+                'release':function(e) {
+                    modelObj.set('rep', e);
+                    ButtonSender(modelObj.get('class'), modelObj.get('id'), modelObj.get('status'), e);
+                }
+            });
             return this;
         },
 
@@ -239,7 +251,7 @@ $(function() {
                     type:   data.type,
                     id:     data.id,
                     value:  data.params.value
-                })
+                });
             
                 hygrometerCollection.push(model);
 	        }
@@ -254,8 +266,15 @@ $(function() {
                 var model = new Button({
                     class:  data.class,
                     type:   data.type,
-                    id:     data.id
-                })
+                    id:     data.id,
+                    rep:    0
+                });
+                $(".knob").knob({
+                    'release':function(e) {
+                        model.set('rep', e);
+                        ButtonSender(model.get('class'), model.get('id'), model.get('status'), 0);
+                    }
+                });
             
                 buttonCollection.push(model);
 	        }
@@ -277,6 +296,12 @@ $(function() {
             var model = buttonCollection.get(data.id);
             var view = new ButtonView({model: model});
             $("#DevicesList").append(view.render().el);
+            $(".knob").knob({
+                'release':function(e) {
+                    model.set('rep', e);
+                    ButtonSender(model.get('class'), model.get('id'), model.get('status'), e);
+                }
+            });
         };
 
         return {
