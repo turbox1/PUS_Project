@@ -5,24 +5,37 @@ body {
 }
 
 div, p {
-    margin: 4px;
+    margin: 0px;
     padding: 0px;
 	background: #666;
 }
 
+#wrapper {
+    margin: 10px 0px 0px 20px;
+}
+
+.columnLeft {
+    width: 257px;
+    float: left;
+}
+
 .deviceBox {
+    margin: 0px;
     border: 1px solid #f4f4f4;
-    height: 140px;
-    width: 210px;
+    height: 130px;
+    width: 200px;
     padding: 10px;
 	float: left;
 }
 
-#ApplicationContainer {
+#DevicesContainer {
     width: 600px;
-	align: center;
 	margin: 0px auto;
 	padding: 0px;
+}
+
+#controllersContainer {
+    margin: 0px 10px 0px 0px;
 }
 	    
 ul { 
@@ -35,4 +48,33 @@ meter {
     width: 190px;
 }
 
+.button {
+    width: 100px;
+    height: 30px;
+}
 
+.save-button {
+    margin: 10px 0px 0px 0px;
+}
+
+#controllersContainer #createRoom {
+    margin-left: 20px;
+}
+
+#controllersContainer .button {
+    float: left;
+    margin: 5px 10px 5px 5px;
+}
+
+#devicesTree {
+    padding-top: 5px;
+}
+
+.deviceTop {
+    margin: 2px 0px 6px 0px;
+}
+
+.buttonDeviceStatusBox {
+    width: 120px;
+    float: left;
+}

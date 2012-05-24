@@ -11,11 +11,25 @@ $(function() {
         view: {}
     }
      
-    $("#createRoom").click(function () {
+    $("#createRoom").click(function (e) {
+        e.preventDefault();
 		$("#DevicesTree").jstree("create",-1,"first","Podaj nazwę");
-        //console.log($("#DevicesTree").jstree("get_json")); 
 	});
+
+    $("#removeRoom").click(function (e) {
+        e.preventDefault();
+		var selected = $("#DevicesTree").jstree("get_selected");
+       
+        if (selected.filter('#aDevices').length) {
+            return false;    
+        }
+        $('#DevicesTree').jstree('remove', selected);
+	});
+
     $("#DevicesTree")
+        .bind("loaded.jstree", function() {
+             $('#DevicesTree').html($.cookie('devicesTree'));
+        })
 	    .jstree({
 		    core : { 
                 "initially_open" : [ "aDevices" ]
@@ -31,20 +45,15 @@ $(function() {
 	    				"max_depth" : 2,
 		    			"hover_node" : false,
 			    		"select_node" : function (node , check , e) {
-                            //console.info('Dodaje urządzenia z wybranego pokoju do szczegółowego widoku.');
-
                             $("#DevicesList").html('');
                             node.find('li').each(function(index) {
                                 var dId = $(this).attr('id').substr(8).split("-");
-                                //console.log(dId);
-                                //$('#aDevices ul').html('');
                                 DeviceFactory.update({
                                     "class": dId[0],
                                     "type": dId[1],
                                     "id": dId[2]
                                 });
                             });
-                            //return false;
                         }
 				    },
     				"default" : {
@@ -55,15 +64,10 @@ $(function() {
             "crrm" : { 
 			    "move" : {
 			    	"check_move" : function (m) {
-                        // całe dzrzewko ktore potrzeba zapisac
-                        //var list = $(this.get_container()).children('ul').children().not('#aDevices');
                         var deviceToMove = "#"+$(m.o).attr('id');
-
-                        if ($(m.np).children('ul').find(deviceToMove).not(m.o).length) 
-                        {
+                        if ($(m.np).children('ul').find(deviceToMove).not(m.o).length) {
                             return false;
                         }
-
                         return true;
 			    	}
 	    		}
@@ -71,7 +75,7 @@ $(function() {
             "html_data" : {
 			    "data" : "<li id='aDevices' rel='root'><a href='#'>Dostępne urządzenia</a></li>"
 	    	},
-    		plugins : [ "themes", "html_data", "json_data", "types", "ui", "crrm", "dnd", "cookies", "contextmenu"]
+    		plugins : [ "themes", "html_data", "json_data", "types", "ui", "crrm", "dnd"]
 	});
 
     // models
@@ -384,7 +388,7 @@ $(function() {
     var MockDeamon = (function() {
     
         var _options = {
-            interval: 5000,
+            interval: 5000000,
             a: -1,
             data: [
                 [
@@ -505,6 +509,9 @@ $(function() {
     
         initialize: function() {
             Deamon.run();
+            $(window).unload(function () {
+                $.cookie('devicesTree', $("#DevicesTree").html(), { expires: 365 });                
+            });
         },
 
         updateDevices: function(data) {
