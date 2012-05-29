@@ -28,7 +28,10 @@ $(function() {
 
     $("#DevicesTree")
         .bind("loaded.jstree", function() {
-             $('#DevicesTree').html($.cookie('devicesTree'));
+            $('#DevicesTree').html('<ul><li id="aDevices" rel="root" class="jstree-open jstree-last"><ins class="jstree-icon">&nbsp;</ins><a href="#"><ins class="jstree-icon">&nbsp;</ins>Dostępne urządzenia</a><ul>');
+            if ($.cookie('devicesTree')) {
+                 $('#DevicesTree').html($.cookie('devicesTree'));
+            }
         })
 	    .jstree({
 		    core : { 
@@ -72,9 +75,6 @@ $(function() {
 			    	}
 	    		}
     		},
-            "html_data" : {
-			    "data" : "<li id='aDevices' rel='root'><a href='#'>Dostępne urządzenia</a></li>"
-	    	},
     		plugins : [ "themes", "html_data", "json_data", "types", "ui", "crrm", "dnd"]
 	});
 
