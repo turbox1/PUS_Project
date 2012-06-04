@@ -10,12 +10,14 @@ $(function() {
         },
         view: {}
     }
-     
+    
+    // Binduje event dodawania nowego pokoju do drzewka  
     $("#createRoom").click(function (e) {
         e.preventDefault();
 		$("#DevicesTree").jstree("create",-1,"first","Podaj nazwę");
 	});
 
+    // Binduje event usuwania elementu z drzewka
     $("#removeRoom").click(function (e) {
         e.preventDefault();
 		var selected = $("#DevicesTree").jstree("get_selected");
@@ -26,9 +28,12 @@ $(function() {
         $('#DevicesTree').jstree('remove', selected);
 	});
 
+    // Tworze obiek drzewka do elementu #DevicesTree
     $("#DevicesTree")
+        // Bindowanie eventu załadowania drzewka, dodajemy standardowy pokój "Dostępne urządzenia"
         .bind("loaded.jstree", function() {
             $('#DevicesTree').html('<ul><li id="aDevices" rel="root" class="jstree-open jstree-last"><ins class="jstree-icon">&nbsp;</ins><a href="#"><ins class="jstree-icon">&nbsp;</ins>Dostępne urządzenia</a><ul>');
+            // Jeśli było zapisane w cookie to ładujemy z cookie
             if ($.cookie('devicesTree')) {
                  $('#DevicesTree').html($.cookie('devicesTree'));
             }
@@ -48,6 +53,7 @@ $(function() {
 	    				"max_depth" : 2,
 		    			"hover_node" : false,
 			    		"select_node" : function (node , check , e) {
+                            // Po zaznaczeniu pokoju pokazujemy liste urządzeń z prawej strony
                             $("#DevicesList").html('');
                             node.find('li').each(function(index) {
                                 var dId = $(this).attr('id').substr(8).split("-");
@@ -67,6 +73,8 @@ $(function() {
             "crrm" : { 
 			    "move" : {
 			    	"check_move" : function (m) {
+                        // sprawdzamy czy mozemy przenieść element do danego pokoju,
+                        // w jednym pokoju moze byc jedno takie samo urządzenie
                         var deviceToMove = "#"+$(m.o).attr('id');
                         if ($(m.np).children('ul').find(deviceToMove).not(m.o).length) {
                             return false;
@@ -78,7 +86,7 @@ $(function() {
     		plugins : [ "themes", "html_data", "json_data", "types", "ui", "crrm", "dnd"]
 	});
 
-    // models
+    // modele
     var Thermometer = Backbone.Model.extend({
     
         defaults: {
@@ -125,6 +133,7 @@ $(function() {
         }
     });
 
+    // Wysyłanie stanu przycisku
     var ButtonSender = function(classVar, id, statusVar, repeat) {
         $.ajax({
             url: App.options.url,
@@ -149,6 +158,7 @@ $(function() {
         model: Button
     });
 
+    // inicjalizacja kolekcji    
     var thermometerCollection = new ThermometerCollection();
     var hygrometerCollection = new HygrometerCollection();
     var buttonCollection = new ButtonCollection();
@@ -203,6 +213,7 @@ $(function() {
             var modelObj = this.model;
             model.type = (model.type == 3) ? "Włączony" : "Wyłączony";
             this.$el.html(this.template(model));
+            // Inicjalizacja pokrętła
             $(".knob").val(modelObj.get('rep')).knob({
                 'release':function(e) {
                     modelObj.set('rep', e);
@@ -217,7 +228,7 @@ $(function() {
         }
     });
 
-
+    // Fabryka urządzeń
     var DeviceFactory = (function() {  
         var _thermometer = function(data) {
 
@@ -275,6 +286,7 @@ $(function() {
                 });
                 $(".knob").knob({
                     'release':function(e) {
+                        // po zwolnieniu pokrętła wysyłamy stan urządzenia
                         model.set('rep', e);
                         ButtonSender(model.get('class'), model.get('id'), model.get('status'), 0);
                     }
@@ -308,6 +320,7 @@ $(function() {
             });
         };
 
+        // Udostępniamy publicznie metody
         return {
             make: function(data) {
                 if (data.class == 10) {
@@ -342,11 +355,13 @@ $(function() {
         };
     }());
 
-     var TreeFactory = (function() {  
+    // Fabryka dodawania urzadzen do drzewka
+    var TreeFactory = (function() {  
        
         return {
             make: function(data) {
                 if (data.class == 10) {
+                    // termometr 
                     if (data.type == 6) {
                         $("#DevicesTree").jstree("create",
                             "#aDevices",
@@ -357,6 +372,7 @@ $(function() {
                             },
                             false, true);
                     }
+                    // higrometr
                     else if (data.type == 35) {
                         $("#DevicesTree").jstree("create",
                             "#aDevices",
@@ -369,6 +385,7 @@ $(function() {
                     }
                 }
                 else if (data.class == 20) {
+                    // przycisk
                     if (data.type == 3 || data.type == 4) {
                         $("#DevicesTree").jstree("create",
                             "#aDevices",
@@ -384,7 +401,7 @@ $(function() {
         };
     }());
 
-
+    // Przykładowy deamon udający urządzenia
     var MockDeamon = (function() {
     
         var _options = {
@@ -463,6 +480,7 @@ $(function() {
         }
     }());
 
+    // Deamon autoaktualizacji stanu urządzeń
     var Deamon = (function() {
     
         var _options = {
@@ -474,6 +492,7 @@ $(function() {
 
         var run = function() {
             var self = this;
+            // worker uruchamiany z interwałem, pobiera stan urządzeń
             (function worker() {
                 $.ajax({
                     url: App.options.url,
@@ -484,7 +503,7 @@ $(function() {
                             self.getOptions.a = -1;
                         }
                         self.getOptions.a++;
-
+                        // aktualizacja stanu urządzeń na widoku
                         App.view.updateDevices(response.data);
                     },
                     complete: function() {
@@ -508,7 +527,9 @@ $(function() {
         el: $("#ApplicationContainer"),
     
         initialize: function() {
+            // startujemy deamona
             Deamon.run();
+            // przy zamykaniu strony zapisujemy stan drzewka do cookie
             $(window).unload(function () {
                 $.cookie('devicesTree', $("#DevicesTree").html(), { expires: 365 });                
             });
@@ -516,6 +537,7 @@ $(function() {
 
         updateDevices: function(data) {
             $('#aDevices ul').html('');
+            // przekazujemy pokolei urzadzenia do fabryki do utworzenia
             $(data).each(function() {
                 DeviceFactory.make(this);
                 TreeFactory.make(this);
@@ -529,11 +551,11 @@ $(function() {
     
     
 
-    // finally start app
+    // startujemy aplikacje
     App.view = new AppView;
 
     
 
-}); //end of application
+}); //koniec aplikacji
 
 
