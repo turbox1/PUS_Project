@@ -1,4 +1,4 @@
-#include <stdio.h>
+g#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -17,32 +17,40 @@ extern uint8_t vscp_second;
 pthread_t web_thread;
 pthread_t serial_thread;
 pthread_t one_second;
-pthread_mutex_t serial_mutex;
+pthread_mutex_t serial_mutex; //mutex dla funkcji odbierajacej dane z RS'a
 
 
 //------------------------ functions ----------------------
-void init_daemon();
-void init_eeprom();
+void init_daemon(); //funkcja inicjuje daemona VSCPD;
+void init_eeprom(); //funkcja inicjuje eeprom domyslnymi wartosciami;
 
 
 //----------------------- threads_fun ---------------------
-void* web_thread_fun(void* arg);
-void* serial_thread_fun(void* arg);
-void* one_second_thread_fun(void* arg);
+void* web_thread_fun(void* arg); //funkcja watku odpowiadajacego za komunikacje z przegladarka
+void* serial_thread_fun(void* arg); //funkcja watku czuwajacego nad danymi z portu szeregowego
+void* one_second_thread_fun(void* arg); //funkcja watku inkrementuje timery i odlacza "głuche / martwe" wezly;
 
 
 //--------------------------- main ------------------------
 int main(int argc, char* argv[]) {
   init_daemon(); //rozpoczynanie pracy daemona
   
+  //sprawdzam czy istnieje odpowiedni plik eepromu jesli nie to tworze taki plik
   eeprom_fd = fopen("/www/eeprom.cfg", "r+b");  
   if(eeprom_fd == NULL)	eeprom_fd = fopen("/www/eeprom.cfg", "w+b");  
-  
+ 
+  //sprawdzam czy plik eepromu jest spojny i zawiera poprawne dane
+  //jesli nie to inicjuje plik eepromu domyslnymi wartosciami
   if(!vscp_check_pstorage()) init_eeprom();
   
-  vscp_init();
-  printf("NICKNAME = 0x%x\n", vscp_nickname);
+  //inicjuje protokol VSCP
+  vscp_init(); 
+  printf("NICKNAME = 0x%x\n", vscp_nickname); 
   
+  
+  //petla nieskonczona sprawdza w jakim stanie znajduje sie wezel
+  //bada w jakim stanie znajduje sie wezel
+  //jesli pojawia sie ramka z danymi to obsluguje ja
   while(1) {
 	  switch(vscp_node_state) {
 		  case VSCP_STATE_STARTUP:
@@ -76,12 +84,16 @@ int main(int argc, char* argv[]) {
 	  }
   }
   
+  //czekam na zakonczenie watkow
   pthread_join(serial_thread, NULL);
   pthread_join(web_thread, NULL);
   pthread_join(one_second, NULL);
 
+  //zamykam plik
   fclose(eeprom_fd);
+  //zamykam socket UDP
   close(net_fd);
+  //zamykam port szeregowy
   close(serial_fd);
  
   return 0;
@@ -93,14 +105,17 @@ int main(int argc, char* argv[]) {
 void init_daemon() {
   printf("init_daemon\n");
 
+  //Tworze odpowiednie watki
   pthread_create(&web_thread, NULL, web_thread_fun, NULL);
   pthread_create(&serial_thread, NULL, serial_thread_fun, NULL);
   pthread_create(&one_second, NULL, one_second_thread_fun, NULL);
 
   serial_fd = -1;
+  //otwieram port "/dev/ttyS1" z predkoscia 57600 BAUD
   serial_fd = openPort("/dev/ttyS1", 57600);
   
   net_fd = 0;
+  //tworze socket UDP po stronie Daemona
   net_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if(net_fd == -1) {
 	  fprintf(stderr, "socket()\n");
@@ -121,13 +136,15 @@ void init_daemon() {
 
   eeprom_fd = NULL;
   
+  //zeruje tablice z wezlami oraz stanem przyciskow
+  //node_light - tablica ze stanami przyciskow
   for(active_node=0; active_node<NODE_NUM; active_node++) {
 	  node_light[active_node] = 0;
 	  node_list[active_node] = 0;
   }
-  active_node = 0;
-
   
+  //zeruje liczbe aktywnych wezlow
+  active_node = 0;
 }
 
 
@@ -137,13 +154,17 @@ void* web_thread_fun(void* arg) {
   uint8_t x, i;
   int rv;
   
+  //komunikacja z CGI - wiecej danych w dokumentacji
+  //czysce wiadomosc z danymi przychodzacymi
   struct _imsg web_msg;
   size_t web_msg_len = sizeof(struct _imsg);
   memset((void*)&web_msg, 0, web_msg_len);
    
   while(1) {
+	  //odbieram dane od skryptu CGI - VSCPC.CGI
 		rv = recvfrom(net_fd, &web_msg, web_msg_len, 0, (struct sockaddr*)&saddr, &saddr_len);
     	if(web_msg.class == VSCP_CLASS1_DATA && web_msg.type == VSCP_TYPE_UNDEFINED) {
+			//wysylam dane do skryptu CGI
     		rv = sendto(net_fd, &active_node, 1, 0,(struct sockaddr*)&saddr, saddr_len);
     		i=0;
 	  
@@ -205,10 +226,13 @@ void* serial_thread_fun(void* arg) {
   len = 0;
   memset(buf, 0, BUF_SIZE);
   
+  
+  //odbieram dane z portu szeregowego oraz wywoluje obsluge zdarzenia
   do {
     len += read(serial_fd, &buf[len], 1);
     if(len > 2 && buf[len-2] == DLE && buf[len-1] == ETX) {
 	  while(pthread_mutex_trylock(&serial_mutex));
+	  //wywoluje obsluge zdarzenia
       vscp_getEvent();
       //printf("Len = %d\n", len);
       pthread_mutex_unlock(&serial_mutex);
@@ -227,12 +251,21 @@ void* one_second_thread_fun(void* arg) {
   volatile uint8_t x = 0;
   uint8_t i = 0;
   while(1) {
+	//inkrementuje timer co 1ms
 	++vscp_timer;
 	if(vscp_timer == 1000) {
+		//wykonuje prace co sekunde 
+		//funkcja protokolu VSCP inkrementuje licznik sekund, minut, godzin
 		vscp_doOneSecondWork();
+		//zeruje timer vscp
 		vscp_timer = 0;
 		
+		//jesli sa jakies aktywne wezly to  inkrementuje zmienna x
 		if(active_node) ++x;
+		//co 30 sekund sprawdzam czy nie trzeba odlaczyc jakiegos wezla
+		//dekerementuje zmienno node_list[i] 
+		//jesli node_list[i] = 0 to odlaczam wezel
+		//wartosc node_list[i] zalezy od ustawianej wartosc po TIMEOUT w configu
 		if(x==30) {
 			for(i=0; i<NODE_NUM; i++) {
 				if(node_list[i] != 0) {
@@ -247,7 +280,8 @@ void* one_second_thread_fun(void* arg) {
 			x = 0;
 		}
 	}
-    usleep(900);
+	//usypiam na 1000us
+    usleep(1000);
   }
 }
 

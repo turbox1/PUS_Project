@@ -1180,8 +1180,20 @@ void vscp_handleProtocolEvent( void )
 					
 	}	// CLASS1.PROTOCOL event
 	
+//----------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
+//moje modyfikacje zaczynaja sie tu!
+//----------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
+
+
+//reakcja na ramke klasy 20 - INFORMATION
+//Type 3 - przycisk wlaczony
+//Type 4 - przycisk wylaczony
 	if(VSCP_CLASS1_INFORMATION == vscp_imsg.class) {
-		vscp_imsg.oaddr = 4; //---- VSCP WORKS
+		//oszukanie w przypadku danych z VSCP_WORKS
+		//do wykomentowania vscp_imsg_oaddr...
+		vscp_imsg.oaddr = 4; //---- VSCP WORKS  //VSCP_WORKS adres 0x04
 		switch(vscp_imsg.type) {
 			case VSCP_TYPE_INFORMATION_ON:
 				node_light[vscp_imsg.oaddr] = 1;
@@ -1202,19 +1214,31 @@ void vscp_handleProtocolEvent( void )
 		}
 	}	// CLASS20.INFORMATION event
 	
+	
+//interpretacja wiadomosci class = 10 - MEASUREMENT
+//type 6 - TEMPERATURE
+//type 35 - HUMIDITY
+	
 	if(VSCP_CLASS1_MEASUREMENT == vscp_imsg.class) {
+		//uint8_t x;
 		vscp_imsg.oaddr = 4; //---- VSCP WORKS
+		
 		switch(vscp_imsg.type) {
 			case VSCP_TYPE_MEASUREMENT_TEMPERATURE:
 				if((vscp_imsg.flags & 0x0F) == 3) {
-					node_temperature[vscp_imsg.oaddr] = 2472;
+					//for(x=0; x<2; x++) ((uint8_t*)&node_temperature[vscp_imsg.oaddr])[x] = vscp_imsg.data[x+1];
+					//do zakomentowania
+					node_temperature[vscp_imsg.oaddr] = 2472; //wypelniam ramke przypadkowymi danym
 					node_unit[vscp_imsg.oaddr] = (vscp_imsg.data[0] & 0x0F);
+					
 					//printf("temperature: %d  temp = %d\n", node_unit[vscp_imsg.oaddr], node_temperature[vscp_imsg.oaddr]);
 				}
 				break;
 			case VSCP_TYPE_MEASUREMENT_HUMIDITY:
-				if((vscp_imsg.flags & 0x0F) == 2) {
-					node_humidity[vscp_imsg.oaddr] = 7024;
+				if((vscp_imsg.flags & 0x0F) == 2) {		
+					//for(x=0; x<2; x++) ((uint8_t*)&node_humidity[vscp_imsg.oaddr])[x] = vscp_imsg.data[x];
+					//do zakomentowania
+					node_humidity[vscp_imsg.oaddr] = 7024; //wypelniam wilgotnosc
 					//printf("humidity\n");	
 				}
 				break;
@@ -1269,7 +1293,7 @@ int8_t vscp_getEvent( void )
 						        vscp_imsg.data ) ) ) {
     						        
         vscp_imsg.flags |= VSCP_VALID_MSG; 
-        
+      
         printf("RS232 -> Event NODE :: [ %x ]\t[ CLASS = %d ] [ TYPE = %d ]\n", vscp_imsg.oaddr, vscp_imsg.class, vscp_imsg.type);
     }				
 	
@@ -1277,7 +1301,7 @@ int8_t vscp_getEvent( void )
 	
 }
 
-
+//implementacja odpowiednich funkcji niezbednych do prawidlowego funkcjonowania wezla
 /*!
     Get a VSCP frame frame
     @param pvscpclass Pointer to variable that will get VSCP class.
@@ -1311,15 +1335,22 @@ int8_t getVSCPFrame( uint16_t *pvscpclass,
 		//printf("%d :: %x\n", x, buf[x]);
   //}
   
+
   if(len-9 != *pSize) return FALSE;
+
+//to odkomentowac
+//zerowaniu w przypadku transmisji HEART_BREAT w przypadku 
+//  if(node_list[*pNodeId] > 0)
+	//node_list[*pNodeId] = TIMEOUT_HEARTBEAT;
+
+//spreparowane na potrzeby wspolpracy z VSCP - zakomentowa
   if(node_list[4] > 0) 
   	node_list[4] = TIMEOUT_HEARTBEAT;
-  //if(node_list[*pNodeId] > 0)
-  //node_list[*pNodeId] = TIMEOUT_HEARTBEAT; //zerowanie heartbeat
-  return TRUE;
+
+return TRUE;
 }
 
-/*!
+c/*!
     Send a VSCP frame
     @param vscpclass VSCP class for event.
     @param vscptype VSCP type for event.
@@ -1451,17 +1482,18 @@ uint8_t vscp_getBootLoaderAlgorithm( void ) { return VSCP_BOOTLOADER_NONE; }
 /*!
 	Get buffer size
 */
-uint8_t vscp_getBufferSize( void )  { return 0x11; }
+uint8_t vscp_getBufferSize( void )  { return 0x00; }
 
 /*!
 	Get number of register pages used by app.
 */
-uint8_t vscp_getRegisterPagesUsed( void ) { return 0x11; }
+uint8_t vscp_getRegisterPagesUsed( void ) { return 0x00; }
 
 /*!
 	Get URL from device from permanent storage
 	index 0-15
 */
+//nie ma pliku MDF
 uint8_t vscp_getMDF_URL( uint8_t idx ) { return idx; }
 
 /*!
