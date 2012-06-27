@@ -1,4 +1,4 @@
-g#include <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -8,6 +8,7 @@ g#include <stdio.h>
 #include "src/vscp_firmware.h"
 #include "src/vscp_class.h"
 #include "src/vscp_type.h"
+#include "src/vscp_log.h"
 
 
 //---------------------- extern_variable ------------------
@@ -18,6 +19,7 @@ pthread_t web_thread;
 pthread_t serial_thread;
 pthread_t one_second;
 pthread_mutex_t serial_mutex; //mutex dla funkcji odbierajacej dane z RS'a
+pthread_mutex_t log_mutex;
 
 
 //------------------------ functions ----------------------
@@ -45,8 +47,12 @@ int main(int argc, char* argv[]) {
   
   //inicjuje protokol VSCP
   vscp_init(); 
-  printf("NICKNAME = 0x%x\n", vscp_nickname); 
-  
+  //printf("NICKNAME = 0x%x\n", vscp_nickname); 
+
+  while(pthread_mutex_trylock(&log_mutex));
+  sprintf(log_tmp, "NICKNAME = 0x%x\n", vscp_nickname);
+  log_printf();
+  pthread_mutex_unlock(&log_mutex);
   
   //petla nieskonczona sprawdza w jakim stanie znajduje sie wezel
   //bada w jakim stanie znajduje sie wezel
@@ -78,7 +84,8 @@ int main(int argc, char* argv[]) {
 				break;
 				
 		  case VSCP_STATE_ERROR:
-				printf("ERROR :: Exit(-1);\n");
+				//printf("VSCP_ERROR :: Exit(-1);\n");
+				log_fprintf("VSCP_ERROR :: exit(-1);\n");
 				exit(-1);
 				break;
 	  }
@@ -103,7 +110,11 @@ int main(int argc, char* argv[]) {
 
 //---------------------------------------------------------
 void init_daemon() {
-  printf("init_daemon\n");
+  //Logowanie
+  log_init();
+
+  //printf("init_daemon\n");
+  log_fprintf("init daemon\n");
 
   //Tworze odpowiednie watki
   pthread_create(&web_thread, NULL, web_thread_fun, NULL);
@@ -150,7 +161,8 @@ void init_daemon() {
 
 //------------------------ = ---------------------------------
 void* web_thread_fun(void* arg) {
-  printf("web_thread_fun()\n");
+  //printf("web_thread_fun()\n");
+  log_fprintf("web_thread_fun()\n");
   uint8_t x, i;
   int rv;
   
@@ -213,7 +225,11 @@ void* web_thread_fun(void* arg) {
 			web_msg.data[6] = 0x00;
 			if(sendVSCPFrame(web_msg.class, web_msg.type, web_msg.oaddr, web_msg.priority, 0x07, web_msg.data))
 		
-			printf("WEB -> Button NODE :: [ %x ]\t [ REPEAT = %d ]\n", web_msg.oaddr, ((web_msg.data[0]&0xF8) >> 3));
+			while(pthread_mutex_trylock(&log_mutex));
+			sprintf(log_tmp, "WEB -> Button NODE :: [ %x ]\t [ REPEAT = %d ]\n", web_msg.oaddr, ((web_msg.data[0]&0xF8) >> 3));
+			log_printf();
+			pthread_mutex_unlock(&log_mutex);
+			
 		}	
   }
   pthread_exit(NULL);
@@ -222,7 +238,8 @@ void* web_thread_fun(void* arg) {
 
 //---------------------------------------------------------
 void* serial_thread_fun(void* arg) {
-  printf("serial_thread_fun()\n");
+  //printf("serial_thread_fun()\n");
+  log_fprintf("serial_thread_fun()\n");
   len = 0;
   memset(buf, 0, BUF_SIZE);
   
@@ -272,7 +289,8 @@ void* one_second_thread_fun(void* arg) {
 					node_list[i]--;
 					if(node_list[i] == 0) {
 						--active_node;
-						printf("Disconnected NODE :: [ %x ]\n", i);
+						sprintf(log_tmp, "Disconnected NODE :: [ %x ]\n", i);
+						log_printf();
 					}
 				}
 				
@@ -289,7 +307,8 @@ void* one_second_thread_fun(void* arg) {
 void init_eeprom() {
 	uint8_t e_init[512];
 	memset(e_init, 0, sizeof(e_init));
-	printf("init_eeprom()\n");
+	//printf("init_eeprom()\n");
+	log_fprintf("init_eeprom()\n");
 	
 	e_init[EEPROM_CRC] = 0x40;
 	e_init[EEPROM_NICKNAME] = 0x02;

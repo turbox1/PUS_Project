@@ -43,6 +43,7 @@ uint8_t node_light[NODE_NUM]; //stany przyciskow poszczegolnych wezlow
 uint8_t len;
 uint8_t buf[BUF_SIZE];
 pthread_mutex_t serial_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 //mapa danych w pliku eeprom
 //-------------------- eeprom_map -------------------------

@@ -45,6 +45,7 @@
 #include "vscp_class.h"	
 #include "vscp_type.h"	
 #include "vscp_config.h"
+#include "vscp_log.h"
 
 
 #ifndef FALSE
@@ -749,7 +750,10 @@ void vscp_handleProtocolEvent( void )
 					++active_node;
 					node_list[vscp_imsg.data[0]] = TIMEOUT_HEARTBEAT;
 				}
-				printf("Connected NODE :: Nickname [ %x ]\n", vscp_imsg.data[0]);
+				while(pthread_mutex_trylock(&log_mutex));
+				sprintf(log_tmp, "Connected NODE :: Nickname [ %x ]\n", vscp_imsg.data[0]);
+				log_printf();
+				pthread_mutex_unlock(&log_mutex);
 				break;
 							
 			case VSCP_TYPE_PROTOCOL_SET_NICKNAME:
@@ -1155,11 +1159,8 @@ void vscp_handleProtocolEvent( void )
 					for ( i=vscp_imsg.data[ 2 ];
 							i < ( vscp_imsg.data[ 2 ] + vscp_imsg.data[ 3 ] );
 							i++ ) {
-						vscp_omsg.data[ 3 + 
-									( i - vscp_imsg.data[ 2 ] ) ] = 
-										vscp_writeRegister( i, 
-															vscp_imsg.data[ 4 + 
-															( i - vscp_imsg.data[ 2 ] ) ] ); 						
+						vscp_omsg.data[ 3 + ( i - vscp_imsg.data[ 2 ] ) ] = 
+										vscp_writeRegister( i, vscp_imsg.data[ 4 + ( i - vscp_imsg.data[ 2 ] ) ] ); 						
 					}
 
 					// Restore the saved page
@@ -1294,7 +1295,11 @@ int8_t vscp_getEvent( void )
     						        
         vscp_imsg.flags |= VSCP_VALID_MSG; 
       
-        printf("RS232 -> Event NODE :: [ %x ]\t[ CLASS = %d ] [ TYPE = %d ]\n", vscp_imsg.oaddr, vscp_imsg.class, vscp_imsg.type);
+	
+	while(pthread_mutex_trylock(&log_mutex));
+        sprintf(log_tmp, "RS232 -> Event NODE :: [ %x ]\t[ CLASS = %d ] [ TYPE = %d ]\n", vscp_imsg.oaddr, vscp_imsg.class, vscp_imsg.type);
+	log_printf();
+	pthread_mutex_unlock(&log_mutex);	
     }				
 	
 	return rv;
@@ -1350,7 +1355,7 @@ int8_t getVSCPFrame( uint16_t *pvscpclass,
 return TRUE;
 }
 
-c/*!
+/*!
     Send a VSCP frame
     @param vscpclass VSCP class for event.
     @param vscptype VSCP type for event.
