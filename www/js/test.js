@@ -6,7 +6,8 @@ $(function() {
     // options - konfiguracja
     var App = {
         options: {
-            url: 'server.php'
+            url: 'server.php',
+            config_url: 'config.php'
         },
         view: {}
     }
@@ -145,6 +146,17 @@ $(function() {
         });
     };
 
+    var Configuration = Backbone.Model.extend({
+    
+        defaults: {
+            id: null,
+            name: null,
+            tree: {}
+        },
+
+        initialize: function() {}
+    });
+
     // collections
     var ThermometerCollection = Backbone.Collection.extend({
         model: Thermometer
@@ -158,10 +170,19 @@ $(function() {
         model: Button
     });
 
+    var ConfigurationCollection = Backbone.Collection.extend({
+        model: Configuration,
+        url : App.options.config_url,
+        parse : function(response) {
+            return response;
+        }
+    });
+
     // inicjalizacja kolekcji    
     var thermometerCollection = new ThermometerCollection();
     var hygrometerCollection = new HygrometerCollection();
     var buttonCollection = new ButtonCollection();
+    var configurationCollection = new ConfigurationCollection();
 
     // views
     var ThermometerView = Backbone.View.extend({
@@ -227,6 +248,59 @@ $(function() {
             this.model.send();
         }
     });
+
+    var ConfigurationView = Backbone.View.extend({
+
+        tagName: "option",
+
+        initialize: function() {
+            _.bindAll(this, 'render');
+        },
+
+        render: function() {
+            $(this.el).attr('value', this.model.get('id')).html(this.model.get('name'));
+            return this;
+        }
+    });
+
+
+    var ConfigurationsView = Backbone.View.extend({
+        el: $("#configurationBox"),
+
+        events: {
+            "change #confListSelect": "changeSelected"
+        },
+        
+        initialize: function(){
+            _.bindAll(this, 'addOne', 'addAll');
+            this.collection.bind('reset', this.addAll);            
+        },        
+        addOne: function(model) {
+            var configurationView = new ConfigurationView({ model: model });
+            this.configurationsViews.push(configurationView);
+            $('#confListSelect').append(configurationView.render().el);
+        },        
+        addAll: function() {
+            _.each(this.configurationsViews, function(configurationView) { configurationView.remove(); });
+            this.configurationsViews = [];
+            this.collection.each(this.addOne);
+            if (this.selectedId) {
+                $(this.el).val(this.selectedId);
+            }
+        },
+        changeSelected: function() {
+            var savedConf = this.collection.get($('#confListSelect').val()).get('tree');
+            if (savedConf) {
+                $('#DevicesTree').html(savedConf);
+            }
+            else {
+                $('#DevicesTree').html('<ul><li id="aDevices" rel="root" class="jstree-open jstree-last"><ins class="jstree-icon">&nbsp;</ins><a href="#"><ins class="jstree-icon">&nbsp;</ins>Dostępne urządzenia</a><ul>');
+            }
+        }
+    });
+
+    new ConfigurationsView({collection: configurationCollection});
+    configurationCollection.fetch();
 
     // Fabryka urządzeń
     var DeviceFactory = (function() {  
@@ -525,7 +599,7 @@ $(function() {
     var AppView = Backbone.View.extend({
    
         el: $("#ApplicationContainer"),
-    
+            
         initialize: function() {
             // startujemy deamona
             Deamon.run();
@@ -543,6 +617,20 @@ $(function() {
                 TreeFactory.make(this);
             });
         },
+
+        /*getConfigurationList: function() {
+             $.ajax({
+                url: App.options.config_url,
+                dataType: 'json',
+                success: function(response) {
+                    configurationCollection.add(response);
+                    configurationCollection.each(function(i) {
+                        var view = new ConfigurationView({model: i});
+                        $("#configListSelect").append(view.render().el);
+                    });
+                }
+            });
+        },*/
 
         render: function() {}
     });

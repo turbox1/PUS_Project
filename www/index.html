@@ -20,6 +20,12 @@
                     <input id="removeRoom" class="button" type="button" value="Usuń" >
                 </div>
                 <div id="DevicesTree" class="demo jstree jstree-0 jstree-default"></div>
+                <div id="configurationBox">
+                    <div class="view deviceBox">
+                        <h2><strong>Konfiguracja</strong></h2>
+                        <select id="confListSelect"></select>
+                    </div>
+                </div>
             </div>
             <div id="DevicesContainer">
                 <ul id="DevicesList"></ul>
@@ -74,6 +80,18 @@
             </div>
                 <input class="knob" data-width="60" data-displayPrevious=true data-fgColor="silver" data-skin="tron" data-thickness=".4" value="<%= rep %>" data-min="0" data-max="31">
         </div>
+    </div>
+</script>
+
+<!-- Templatka lista configuracji -->
+<script type="text/template" id="configuration-template">
+    <div class="view deviceBox">
+        <h2><strong>Konfiguracja</strong></h2>
+        <select id="sconfigListSelect" class="sele">
+            <% _.each(configs, function(config) {%>
+                <option value="<%= config.id %>"><%= config.name %></option>
+            <% }); %>            
+        </select>
     </div>
 </script>
 
