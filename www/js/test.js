@@ -7,7 +7,8 @@ $(function() {
     var App = {
         options: {
             url: 'server.php',
-            config_url: 'config.php'
+            config_url: 'config.php',
+            save_config: 'save_config.php'
         },
         view: {}
     }
@@ -27,6 +28,19 @@ $(function() {
             return false;    
         }
         $('#DevicesTree').jstree('remove', selected);
+	});
+
+    // Binduje event 
+    $("#saveConfiguration").click(function (e) {
+        e.preventDefault();
+		var tree = $("#DevicesTree").html();
+        var filename = $('#confListSelect').val();
+        $.ajax({
+            url: App.options.save_config,
+            dataType: 'json',
+            type: 'post',
+            data: "data="+tree+'&action=0&filename='+filename
+        });
 	});
 
     // Tworze obiek drzewka do elementu #DevicesTree
